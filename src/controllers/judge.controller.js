@@ -1,0 +1,7 @@
+import mongoose from "mongoose";
+import { Judge,Registration,Score } from "../models/index.js";
+import { getJudgeState,mapScore } from "../services/state.service.js";
+import { audit } from "../services/audit.service.js";
+import { HttpError } from "../utils/http.js";
+export async function state(req,res){const s=await getJudgeState(req.session.judgeId);if(!s)throw new HttpError(403,"Judge account is inactive.");res.json(s);}
+export async function saveScore(req,res){const judge=await Judge.findById(req.session.judgeId).lean();if(!judge||!judge.active)throw new HttpError(403,"Judge account is inactive.");const {registrationId,competitionId,mark,notes}=req.body;if(!mongoose.isValidObjectId(registrationId)||!mongoose.isValidObjectId(competitionId))throw new HttpError(422,"Invalid score details.");if(!judge.competitionIds.some(id=>String(id)===competitionId))throw new HttpError(403,"This competition is not assigned to you.");const reg=await Registration.findOne({_id:registrationId,approval:"Approved",cancelled:false,competitionIds:competitionId});if(!reg)throw new HttpError(404,"Eligible participant not found.");const score=await Score.findOneAndUpdate({registrationId,competitionId,judgeId:judge._id},{$set:{mark,notes,savedAt:new Date()}},{new:true,upsert:true,runValidators:true});reg.competitionAttendance.set(competitionId,"Present");await reg.save();await audit(req,"score.save","Score",score._id,{registrationId,competitionId,mark});res.json(mapScore(score));}

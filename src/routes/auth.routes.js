@@ -1,0 +1,12 @@
+import { Router } from "express";
+import { rateLimit } from "express-rate-limit";
+import { csrf,login,logout,me } from "../controllers/auth.controller.js";
+import { validate } from "../middleware/validate.js";
+import { loginSchema } from "../validators/auth.validators.js";
+import { asyncRoute } from "../utils/http.js";
+export const authRouter=Router();
+const limiter=rateLimit({windowMs:15*60*1000,limit:20,standardHeaders:true,legacyHeaders:false,message:{error:{code:"RATE_LIMIT",message:"Too many sign-in attempts. Try again later."}}});
+authRouter.get("/csrf",csrf);
+authRouter.post("/login",limiter,validate(loginSchema),asyncRoute(login));
+authRouter.get("/me",asyncRoute(me));
+authRouter.post("/logout",logout);

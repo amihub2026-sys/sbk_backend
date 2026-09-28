@@ -1,0 +1,3 @@
+export function indiaDate(date=new Date()){return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Kolkata",year:"numeric",month:"2-digit",day:"2-digit"}).format(date);}
+export function formatIndiaDateTime(date){if(!date)return null;return new Intl.DateTimeFormat("en-IN",{timeZone:"Asia/Kolkata",day:"2-digit",month:"short",year:"numeric",hour:"numeric",minute:"2-digit",second:"2-digit",hour12:true}).format(new Date(date));}
+export function ageInMonths(dob,onDate){const d=new Date(`${dob}T00:00:00Z`),o=new Date(`${onDate}T00:00:00Z`);if(Number.isNaN(d.getTime())||Number.isNaN(o.getTime())||d>o)return-1;let months=(o.getUTCFullYear()-d.getUTCFullYear())*12+(o.getUTCMonth()-d.getUTCMonth());if(o.getUTCDate()<d.getUTCDate())months-=1;return months;}
