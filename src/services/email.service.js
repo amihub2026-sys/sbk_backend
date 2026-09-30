@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import { google } from "googleapis";
 import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
 import fs from "node:fs/promises";
@@ -7,25 +7,126 @@ import path from "node:path";
 import { env } from "../config/env.js";
 
 
-function transport() {
+function gmailService() {
   if (
-    !env.smtp.host ||
-    !env.smtp.user ||
-    !env.smtp.pass
+    !env.gmail.clientId ||
+    !env.gmail.clientSecret ||
+    !env.gmail.refreshToken
   ) {
     return null;
   }
 
-  return nodemailer.createTransport({
-    host: env.smtp.host,
-    port: env.smtp.port,
-    secure: env.smtp.secure,
+  const oauth2Client =
+    new google.auth.OAuth2(
+      env.gmail.clientId,
+      env.gmail.clientSecret,
+    );
 
-    auth: {
-      user: env.smtp.user,
-      pass: env.smtp.pass,
-    },
+  oauth2Client.setCredentials({
+    refresh_token:
+      env.gmail.refreshToken,
   });
+
+  return google.gmail({
+    version: "v1",
+    auth: oauth2Client,
+  });
+}
+
+
+function encodeSubject(subject) {
+  return `=?UTF-8?B?${Buffer.from(
+    subject,
+    "utf8",
+  ).toString("base64")}?=`;
+}
+
+
+function base64UrlEncode(value) {
+  return Buffer.from(
+    value,
+    "utf8",
+  )
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+
+function wrapBase64(buffer) {
+  const encoded =
+    buffer.toString("base64");
+
+  return (
+    encoded
+      .match(/.{1,76}/g)
+      ?.join("\r\n") || ""
+  );
+}
+
+
+function buildMimeMessage({
+  from,
+  to,
+  subject,
+  text,
+  html,
+  attachment,
+}) {
+  const mixedBoundary =
+    `mixed_${Date.now()}_${Math.random()
+      .toString(36)
+      .slice(2)}`;
+
+  const alternativeBoundary =
+    `alternative_${Date.now()}_${Math.random()
+      .toString(36)
+      .slice(2)}`;
+
+
+  const lines = [
+    `From: ${from}`,
+    `To: ${to}`,
+    `Subject: ${encodeSubject(subject)}`,
+    "MIME-Version: 1.0",
+    `Content-Type: multipart/mixed; boundary="${mixedBoundary}"`,
+    "",
+    `--${mixedBoundary}`,
+    `Content-Type: multipart/alternative; boundary="${alternativeBoundary}"`,
+    "",
+
+    `--${alternativeBoundary}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    "Content-Transfer-Encoding: 8bit",
+    "",
+    text,
+    "",
+
+    `--${alternativeBoundary}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    "Content-Transfer-Encoding: 8bit",
+    "",
+    html,
+    "",
+
+    `--${alternativeBoundary}--`,
+    "",
+
+    `--${mixedBoundary}`,
+    `Content-Type: ${attachment.contentType}; name="${attachment.filename}"`,
+    "Content-Transfer-Encoding: base64",
+    `Content-Disposition: attachment; filename="${attachment.filename}"`,
+    "",
+    wrapBase64(
+      attachment.content,
+    ),
+    "",
+
+    `--${mixedBoundary}--`,
+  ];
+
+  return lines.join("\r\n");
 }
 
 
@@ -412,13 +513,14 @@ export async function sendPassEmail(
   registration,
   state,
 ) {
-  const tx = transport();
+  const gmail =
+    gmailService();
 
-  if (!tx) {
+  if (!gmail) {
     return {
       sent: false,
       reason:
-        "SMTP_NOT_CONFIGURED",
+        "GMAIL_API_NOT_CONFIGURED",
     };
   }
 
@@ -451,22 +553,15 @@ export async function sendPassEmail(
     ).toFixed(2);
 
 
-  const info =
-    await tx.sendMail({
-      from:
-        env.smtp.from,
+  const subject =
+    `${
+      state.settings.title ||
+      "Chithiram Thiruvila"
+    } – Registration Confirmed – ${registration.applicationNo}`;
 
-      to:
-        registration.email,
 
-      subject:
-        `${
-          state.settings.title ||
-          "Chithiram Thiruvila"
-        } – Registration Confirmed – ${registration.applicationNo}`,
-
-      text:
-        `Hello ${registration.name},
+  const text =
+    `Hello ${registration.name},
 
 Your payment has been received successfully and your registration is confirmed.
 
@@ -479,9 +574,10 @@ Competition time and venue will be announced by the organiser.
 
 Please keep the attached registration pass safely and show its QR at event check-in.
 
-Thank you.`,
+Thank you.`;
 
-      html: `
+
+  const html = `
         <h2>${
           state.settings.title ||
           "Chithiram Thiruvila"
@@ -526,26 +622,55 @@ Thank you.`,
           Please keep the attached registration pass safely
           and show its QR at event check-in.
         </p>
-      `,
+      `;
 
-      attachments: [
-        {
-          filename:
-            `${registration.applicationNo}-event-pass.pdf`,
 
-          content:
-            pdf,
+  const mimeMessage =
+    buildMimeMessage({
+      from:
+        env.smtp.from,
 
-          contentType:
-            "application/pdf",
-        },
-      ],
+      to:
+        registration.email,
+
+      subject,
+
+      text,
+
+      html,
+
+      attachment: {
+        filename:
+          `${registration.applicationNo}-event-pass.pdf`,
+
+        content:
+          pdf,
+
+        contentType:
+          "application/pdf",
+      },
+    });
+
+
+  const raw =
+    base64UrlEncode(
+      mimeMessage,
+    );
+
+
+  const response =
+    await gmail.users.messages.send({
+      userId: "me",
+
+      requestBody: {
+        raw,
+      },
     });
 
 
   return {
     sent: true,
     messageId:
-      info.messageId,
+      response.data.id,
   };
 }
