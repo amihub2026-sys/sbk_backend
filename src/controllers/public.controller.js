@@ -68,7 +68,71 @@ export async function register(req, res) {
     );
 }
 
+/**
+ * ======================================================
+ * CREATE PUBLIC CASH REGISTRATION
+ * ======================================================
+ *
+ * Student/parent submits the form publicly.
+ *
+ * IMPORTANT:
+ * Public user can NEVER confirm cash payment.
+ *
+ * Payment = Pending
+ * Approval = Pending
+ * Registration = Payment Pending
+ * Pass = Pending
+ *
+ * Admin will confirm the cash later.
+ */
+export async function registerCash(req, res) {
+  const record =
+    await createRegistration({
+      ...req.body,
 
+      // Public form submitted online
+      source: "Online",
+
+      // But payment will be collected manually
+      paymentMethod: "Cash",
+
+      // Never trust payment status from public client
+      payment: "Pending",
+
+      approval: "Pending",
+
+      registrationStatus:
+        "Payment Pending",
+
+      paymentConfirmedAt: null,
+
+      approvedAt: null,
+
+      emailStatus: "Pending",
+
+      passStatus: "Pending",
+
+      passGeneratedAt: null,
+
+      // Student cannot claim any cash was paid
+      amountPaid: 0,
+    });
+
+
+  /*
+   * Keep participant session just like
+   * normal online registration.
+   */
+  req.session.participantRegistrationId =
+    String(record._id);
+
+
+  res
+    .status(201)
+    .json(
+      mapRegistration(record),
+    );
+}
 /**
  * ======================================================
  * GET CURRENT PARTICIPANT REGISTRATION

@@ -117,20 +117,68 @@ export async function updateRegistration(req, res) {
   }
 
 
+if (
+  [
+    "Pending",
+    "Paid",
+    "Failed",
+    "RefundPending",
+    "Refunded",
+  ].includes(
+    req.body?.payment,
+  )
+) {
+
+  const previousPayment =
+    r.payment;
+
+
+  r.payment =
+    req.body.payment;
+
+
+  /**
+   * When Admin confirms an existing
+   * Cash registration.
+   */
   if (
-    [
-      "Pending",
-      "Paid",
-      "Failed",
-      "RefundPending",
-      "Refunded",
-    ].includes(
-      req.body?.payment,
-    )
+    r.paymentMethod === "Cash" &&
+    r.payment === "Paid" &&
+    previousPayment !== "Paid"
   ) {
-    r.payment =
-      req.body.payment;
+
+    r.paymentConfirmedAt =
+      new Date();
+
+
+    r.amountPaid =
+      Number(
+        r.total || 0,
+      );
+
   }
+
+
+  /**
+   * If cash payment is changed back
+   * from Paid.
+   */
+  if (
+    r.paymentMethod === "Cash" &&
+    r.payment !== "Paid" &&
+    previousPayment === "Paid"
+  ) {
+
+    r.paymentConfirmedAt =
+      null;
+
+
+    r.amountPaid =
+      0;
+
+  }
+
+}
 
 
   if (

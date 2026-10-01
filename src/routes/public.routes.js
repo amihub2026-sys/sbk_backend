@@ -8,6 +8,7 @@ import {
   getMyRegistration,
   lookupRegistration,
   register,
+  registerCash,
 } from "../controllers/public.controller.js";
 
 import {
@@ -74,7 +75,12 @@ publicRouter.post(
   asyncRoute(register),
 );
 
-
+publicRouter.post(
+  "/registrations/cash",
+  regLimit,
+  validate(onlineRegistrationSchema),
+  asyncRoute(registerCash),
+);
 publicRouter.get(
   "/registrations/me",
   asyncRoute(getMyRegistration),
