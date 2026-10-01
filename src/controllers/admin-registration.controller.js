@@ -133,13 +133,49 @@ if (
     r.payment;
 
 
+  /**
+   * Save the actual cash amount
+   * entered by Admin.
+   */
+  if (
+    r.paymentMethod === "Cash" &&
+    req.body?.amountPaid !== undefined
+  ) {
+
+    const receivedAmount =
+      Number(
+        req.body.amountPaid,
+      );
+
+
+    if (
+      !Number.isFinite(
+        receivedAmount,
+      ) ||
+      receivedAmount < 0
+    ) {
+
+      throw new HttpError(
+        422,
+        "Enter a valid cash amount.",
+      );
+
+    }
+
+
+    r.amountPaid =
+      receivedAmount;
+
+  }
+
+
   r.payment =
     req.body.payment;
 
 
   /**
-   * When Admin confirms an existing
-   * Cash registration.
+   * When Admin confirms
+   * Cash payment.
    */
   if (
     r.paymentMethod === "Cash" &&
@@ -147,21 +183,29 @@ if (
     previousPayment !== "Paid"
   ) {
 
+    if (
+      Number(
+        r.amountPaid || 0,
+      ) <= 0
+    ) {
+
+      throw new HttpError(
+        422,
+        "Enter the cash amount received before confirming payment.",
+      );
+
+    }
+
+
     r.paymentConfirmedAt =
       new Date();
-
-
-    r.amountPaid =
-      Number(
-        r.total || 0,
-      );
 
   }
 
 
   /**
-   * If cash payment is changed back
-   * from Paid.
+   * If Cash payment is changed
+   * back from Paid.
    */
   if (
     r.paymentMethod === "Cash" &&
@@ -171,7 +215,6 @@ if (
 
     r.paymentConfirmedAt =
       null;
-
 
     r.amountPaid =
       0;
