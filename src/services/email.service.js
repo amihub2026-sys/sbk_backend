@@ -1,12 +1,73 @@
 import { google } from "googleapis";
 import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
-import fs from "node:fs/promises";
-import path from "node:path";
 
+import mongoose from "mongoose";
 import { env } from "../config/env.js";
 
+async function readGridFsImage(value) {
+  if (
+    !value ||
+    !String(value).startsWith(
+      env.mediaPublicPath + "/",
+    )
+  ) {
+    return null;
+  }
 
+  const id =
+    String(value)
+      .split("/")
+      .pop();
+
+  if (
+    !mongoose.Types.ObjectId.isValid(id) ||
+    mongoose.connection.readyState !== 1 ||
+    !mongoose.connection.db
+  ) {
+    return null;
+  }
+
+  const bucket =
+    new mongoose.mongo.GridFSBucket(
+      mongoose.connection.db,
+      {
+        bucketName: "media",
+      },
+    );
+
+  const fileId =
+    new mongoose.Types.ObjectId(id);
+
+  return new Promise((resolve) => {
+    const chunks = [];
+
+    const stream =
+      bucket.openDownloadStream(
+        fileId,
+      );
+
+    stream.on(
+      "data",
+      (chunk) =>
+        chunks.push(chunk),
+    );
+
+    stream.on(
+      "end",
+      () =>
+        resolve(
+          Buffer.concat(chunks),
+        ),
+    );
+
+    stream.on(
+      "error",
+      () =>
+        resolve(null),
+    );
+  });
+}
 function gmailService() {
   if (
     !env.gmail.clientId ||
@@ -52,7 +113,6 @@ function base64UrlEncode(value) {
     .replace(/\//g, "_")
     .replace(/=+$/, "");
 }
-
 
 function wrapBase64(buffer) {
   const encoded =
@@ -174,7 +234,8 @@ function formatSchedule(
 }
 
 
-async function passPdf(
+export async function passPdf(
+
   registration,
   state,
 ) {
@@ -279,26 +340,18 @@ async function passPdf(
   // STUDENT PHOTO
   // --------------------------------------------------
 
-  if (
-    registration.photo?.startsWith(
-      env.mediaPublicPath + "/",
-    )
-  ) {
+if (
+  registration.photo?.startsWith(
+    env.mediaPublicPath + "/",
+  )
+) {
+  const photo =
+    await readGridFsImage(
+      registration.photo,
+    );
+
+  if (photo) {
     try {
-      const file =
-        path.basename(
-          registration.photo,
-        );
-
-      const photo =
-        await fs.readFile(
-          path.resolve(
-            process.cwd(),
-            env.mediaDir,
-            file,
-          ),
-        );
-
       doc.image(
         photo,
         doc.page.width - 150,
@@ -311,6 +364,7 @@ async function passPdf(
       // Photo is optional.
     }
   }
+}
 
 
   // --------------------------------------------------
