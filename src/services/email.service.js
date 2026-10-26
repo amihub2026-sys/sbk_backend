@@ -411,7 +411,7 @@ const guruPhoto =
   const headerY = 46;
   const headerWidth =
     doc.page.width - 92;
-  const headerHeight = 180;
+  const headerHeight = 125;
 
 
   doc
@@ -436,7 +436,7 @@ const guruPhoto =
         headerX + 165,
         headerY + 12,
         {
-          fit: [170, 72],
+          fit: [125, 48],
           align: "center",
         },
       );
@@ -454,7 +454,7 @@ const guruPhoto =
     .text(
       "EVENT ORGANISED BY",
       headerX + 20,
-      headerY + 88,
+      headerY + 58,
       {
         width:
           headerWidth - 40,
@@ -465,11 +465,11 @@ const guruPhoto =
 
   doc
     .fillColor("#ffffff")
-    .fontSize(18)
+    .fontSize(14)
     .text(
       "STAR GURU CHARITABLE FOUNDATION",
       headerX + 20,
-      headerY + 103,
+      headerY + 70,
       {
         width:
           headerWidth - 40,
@@ -480,12 +480,12 @@ const guruPhoto =
 
   doc
     .fillColor("#f7d37a")
-    .fontSize(22)
+    .fontSize(17)
     .text(
       state.settings.title ||
         "Chithiram Thiruvila 2026",
       headerX + 20,
-      headerY + 130,
+      headerY + 91,
       {
         width:
           headerWidth - 40,
@@ -500,7 +500,7 @@ const guruPhoto =
     .text(
       "In association with SBK VIBGYOR SCHOOL",
       headerX + 20,
-      headerY + 158,
+      headerY + 112,
       {
         width:
           headerWidth - 40,
