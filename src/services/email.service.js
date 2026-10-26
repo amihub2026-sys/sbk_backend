@@ -32,7 +32,11 @@ const GURU_PHOTO_PATH =
     __dirname,
     "../assets/guru-sammy-thiagarajan.png",
   );
-
+const STAR_GURU_LOGO_PATH =
+  path.join(
+    __dirname,
+    "../assets/star-guru-logo.png",
+  );
 async function readGridFsImage(value) {
   if (
     !value ||
@@ -381,6 +385,14 @@ const guruPhoto =
         GURU_PHOTO_PATH,
       )
     : null;
+    const starGuruLogo =
+  fs.existsSync(
+    STAR_GURU_LOGO_PATH,
+  )
+    ? fs.readFileSync(
+        STAR_GURU_LOGO_PATH,
+      )
+    : null;
   const qr =
     await QRCode.toDataURL(
       registration.qrToken,
@@ -392,195 +404,629 @@ const guruPhoto =
 
 
   // --------------------------------------------------
-  // HEADER
+  // COLORFUL PASS HEADER
   // --------------------------------------------------
 
+  const headerX = 46;
+  const headerY = 46;
+  const headerWidth =
+    doc.page.width - 92;
+  const headerHeight = 180;
+
+
   doc
+    .roundedRect(
+      headerX,
+      headerY,
+      headerWidth,
+      headerHeight,
+      18,
+    )
+    .fill("#153f35");
+
+
+  // STAR GURU LOGO
+
+  if (starGuruLogo) {
+
+    try {
+
+      doc.image(
+        starGuruLogo,
+        headerX + 165,
+        headerY + 12,
+        {
+          fit: [170, 72],
+          align: "center",
+        },
+      );
+
+    } catch {
+      // Logo is optional.
+    }
+
+  }
+
+
+  doc
+    .fillColor("#f4d98a")
+    .fontSize(8)
+    .text(
+      "EVENT ORGANISED BY",
+      headerX + 20,
+      headerY + 88,
+      {
+        width:
+          headerWidth - 40,
+        align: "center",
+      },
+    );
+
+
+  doc
+    .fillColor("#ffffff")
+    .fontSize(18)
+    .text(
+      "STAR GURU CHARITABLE FOUNDATION",
+      headerX + 20,
+      headerY + 103,
+      {
+        width:
+          headerWidth - 40,
+        align: "center",
+      },
+    );
+
+
+  doc
+    .fillColor("#f7d37a")
     .fontSize(22)
     .text(
       state.settings.title ||
-        "Chithiram Thiruvila",
+        "Chithiram Thiruvila 2026",
+      headerX + 20,
+      headerY + 130,
       {
-        align: "center",
-      },
-    );
-
-  doc
-    .moveDown(0.4)
-    .fontSize(11)
-    .text(
-      state.settings.presenters ||
-        "",
-      {
+        width:
+          headerWidth - 40,
         align: "center",
       },
     );
 
 
-  doc.moveDown(1.5);
+  doc
+    .fillColor("#dceae5")
+    .fontSize(9)
+    .text(
+      "In association with SBK VIBGYOR SCHOOL",
+      headerX + 20,
+      headerY + 158,
+      {
+        width:
+          headerWidth - 40,
+        align: "center",
+      },
+    );
 
-
-  // --------------------------------------------------
-  // APPLICATION DETAILS
-  // --------------------------------------------------
 
   doc
-    .fontSize(12)
+    .fillColor("#000000");
+
+
+  doc.y =
+    headerY +
+    headerHeight +
+    22;
+
+
+  // --------------------------------------------------
+  // APPLICATION NUMBER CARD
+  // --------------------------------------------------
+
+  const applicationY =
+    doc.y;
+
+
+  doc
+    .roundedRect(
+      46,
+      applicationY,
+      doc.page.width - 92,
+      62,
+      12,
+    )
+    .fillAndStroke(
+      "#f7f9f7",
+      "#d9e3de",
+    );
+
+
+  doc
+    .fillColor("#6f7d78")
+    .fontSize(8)
     .text(
-      `Application No: ${registration.applicationNo}`,
+      "APPLICATION NUMBER",
+      64,
+      applicationY + 13,
+      {
+        width: 250,
+      },
     );
 
 
-  // --------------------------------------------------
-  // STUDENT PHOTO
-  // --------------------------------------------------
-
-if (
-  registration.photo?.startsWith(
-    env.mediaPublicPath + "/",
-  )
-) {
-  const photo =
-    await readGridFsImage(
-      registration.photo,
+  doc
+    .fillColor("#153f35")
+    .fontSize(21)
+    .text(
+      registration.applicationNo,
+      64,
+      applicationY + 28,
+      {
+        width: 300,
+      },
     );
 
-  if (photo) {
+
+  doc
+    .fillColor("#176b43")
+    .fontSize(9)
+    .text(
+      "REGISTRATION PASS",
+      doc.page.width - 185,
+      applicationY + 24,
+      {
+        width: 120,
+        align: "center",
+      },
+    );
+
+
+  doc
+    .fillColor("#000000");
+
+
+  doc.y =
+    applicationY + 78;
+
+
+
+
+  // --------------------------------------------------
+  // STUDENT DETAILS CARD
+  // --------------------------------------------------
+
+  const studentY =
+    doc.y;
+
+
+  doc
+    .roundedRect(
+      46,
+      studentY,
+      doc.page.width - 92,
+      170,
+      14,
+    )
+    .fillAndStroke(
+      "#ffffff",
+      "#d9e3de",
+    );
+
+
+  let studentPhoto = null;
+
+
+  if (
+    registration.photo?.startsWith(
+      env.mediaPublicPath + "/",
+    )
+  ) {
+
+    studentPhoto =
+      await readGridFsImage(
+        registration.photo,
+      );
+
+  }
+
+
+  if (studentPhoto) {
+
     try {
+
       doc.image(
-        photo,
-        doc.page.width - 150,
-        120,
+        studentPhoto,
+        64,
+        studentY + 22,
         {
-          fit: [86, 86],
+          fit: [95, 95],
+          align: "center",
+          valign: "center",
         },
       );
+
     } catch {
-      // Photo is optional.
+      // Student photo is optional.
     }
+
   }
-}
 
-
-  // --------------------------------------------------
-  // STUDENT DETAILS
-  // --------------------------------------------------
 
   doc
-    .fontSize(16)
+    .fillColor("#153f35")
+    .fontSize(17)
     .text(
       registration.name,
+      180,
+      studentY + 22,
+      {
+        width: 330,
+      },
     );
 
+
   doc
+    .fillColor("#6f7d78")
     .fontSize(10)
     .text(
-      registration.school,
+      registration.school || "",
+      180,
+      studentY + 47,
+      {
+        width: 330,
+      },
     );
 
-  doc.moveDown();
 
   doc
-    .fontSize(11)
+    .fillColor("#6f7d78")
+    .fontSize(8)
     .text(
-      `Father Name: ${registration.fatherName}`,
+      "FATHER NAME",
+      180,
+      studentY + 78,
     );
 
-  doc.text(
-    `Category: ${category?.name || ""}`,
-  );
-
-  doc.text(
-    `Mobile: ${registration.phone}`,
-  );
-
-  doc.text(
-    `Email: ${registration.email}`,
-  );
-
-
-  // --------------------------------------------------
-  // PAYMENT DETAILS
-  // --------------------------------------------------
-
-  doc.moveDown();
 
   doc
+    .fillColor("#1f2d29")
+    .fontSize(10)
+    .text(
+      registration.fatherName || "-",
+      180,
+      studentY + 91,
+      {
+        width: 150,
+      },
+    );
+
+
+  doc
+    .fillColor("#6f7d78")
+    .fontSize(8)
+    .text(
+      "CATEGORY",
+      355,
+      studentY + 78,
+    );
+
+
+  doc
+    .fillColor("#1f2d29")
+    .fontSize(10)
+    .text(
+      category?.name || "-",
+      355,
+      studentY + 91,
+      {
+        width: 150,
+      },
+    );
+
+
+  doc
+    .fillColor("#6f7d78")
+    .fontSize(8)
+    .text(
+      "MOBILE",
+      180,
+      studentY + 119,
+    );
+
+
+  doc
+    .fillColor("#1f2d29")
+    .fontSize(10)
+    .text(
+      registration.phone || "-",
+      180,
+      studentY + 132,
+      {
+        width: 150,
+      },
+    );
+
+
+  doc
+    .fillColor("#6f7d78")
+    .fontSize(8)
+    .text(
+      "EMAIL",
+      355,
+      studentY + 119,
+    );
+
+
+  doc
+    .fillColor("#1f2d29")
+    .fontSize(9)
+    .text(
+      registration.email || "-",
+      355,
+      studentY + 132,
+      {
+        width: 155,
+      },
+    );
+
+
+  doc
+    .fillColor("#000000");
+
+
+  doc.y =
+    studentY + 190;
+
+    // --------------------------------------------------
+  // PAYMENT DETAILS CARD
+  // --------------------------------------------------
+
+  const paymentY =
+    doc.y;
+
+
+  doc
+    .roundedRect(
+      46,
+      paymentY,
+      doc.page.width - 92,
+      112,
+      14,
+    )
+    .fillAndStroke(
+      "#eef7f2",
+      "#c7dfcf",
+    );
+
+
+  doc
+    .fillColor("#176b43")
     .fontSize(13)
     .text(
       "Payment Details",
+      64,
+      paymentY + 16,
       {
-        underline: true,
+        width: 220,
       },
     );
 
+
   doc
-    .fontSize(11)
+    .fillColor("#6f7d78")
+    .fontSize(8)
     .text(
-      `Payment Status: ${registration.payment}`,
+      "PAYMENT STATUS",
+      64,
+      paymentY + 46,
     );
 
-  doc.text(
-    `Payment Method: ${registration.paymentMethod}`,
-  );
 
-  doc.text(
-    `Amount Paid: ₹${Number(
-      registration.total || 0,
-    ).toFixed(2)}`,
-  );
+  doc
+    .fillColor("#1f2d29")
+    .fontSize(10)
+    .text(
+      registration.payment || "-",
+      64,
+      paymentY + 59,
+    );
 
-  doc.text(
-    `Registration Status: ${
+
+  doc
+    .fillColor("#6f7d78")
+    .fontSize(8)
+    .text(
+      "PAYMENT METHOD",
+      210,
+      paymentY + 46,
+    );
+
+
+  doc
+    .fillColor("#1f2d29")
+    .fontSize(10)
+    .text(
+      registration.paymentMethod || "-",
+      210,
+      paymentY + 59,
+    );
+
+
+  doc
+    .fillColor("#6f7d78")
+    .fontSize(8)
+    .text(
+      "AMOUNT PAID",
+      355,
+      paymentY + 46,
+    );
+
+
+  doc
+    .fillColor("#1f2d29")
+    .fontSize(10)
+    .text(
+      `Rs. ${Number(
+        registration.total || 0,
+      ).toFixed(2)}`,
+      355,
+      paymentY + 59,
+    );
+
+
+  doc
+    .fillColor("#6f7d78")
+    .fontSize(8)
+    .text(
+      "REGISTRATION STATUS",
+      64,
+      paymentY + 82,
+    );
+
+
+  doc
+    .fillColor("#176b43")
+    .fontSize(10)
+    .text(
       registration.registrationStatus ||
-      "Confirmed"
-    }`,
-  );
-
-
-  // --------------------------------------------------
-  // COMPETITIONS
-  // --------------------------------------------------
-
-  doc.moveDown();
-
-  doc
-    .fontSize(13)
-    .text(
-      "Competitions",
-      {
-        underline: true,
-      },
+        "Confirmed",
+      210,
+      paymentY + 82,
     );
 
 
-  for (
-    const competition of competitions
+  doc
+    .fillColor("#000000");
+
+
+  doc.y =
+    paymentY + 132;
+
+  // --------------------------------------------------
+  // COMPETITIONS CARD
+  // --------------------------------------------------
+
+  if (
+    doc.y >
+    doc.page.height - 220
   ) {
-    const schedule =
-      formatSchedule(
-        competition,
-        state,
-      );
-
-    doc
-      .fontSize(11)
-      .text(
-        `• ${competition.name}`,
-      );
-
-    doc
-      .fontSize(10)
-      .text(
-        `  Schedule: ${schedule}`,
-      );
-
-    doc.moveDown(0.4);
+    doc.addPage();
   }
 
 
+  const competitionsY =
+    doc.y;
+
+
+  const competitionCardHeight =
+    60 +
+    competitions.length * 52;
+
+
+  doc
+    .roundedRect(
+      46,
+      competitionsY,
+      doc.page.width - 92,
+      competitionCardHeight,
+      14,
+    )
+    .fillAndStroke(
+      "#f8f5ff",
+      "#ddd3ef",
+    );
+
+
+  doc
+    .fillColor("#153f35")
+    .fontSize(14)
+    .text(
+      "Competitions",
+      64,
+      competitionsY + 16,
+      {
+        width: 220,
+      },
+    );
+
+
+  let competitionRowY =
+    competitionsY + 46;
+
+
+  competitions.forEach(
+    (competition, index) => {
+
+      const schedule =
+        formatSchedule(
+          competition,
+          state,
+        );
+
+
+      if (index > 0) {
+
+        doc
+          .moveTo(
+            64,
+            competitionRowY - 8,
+          )
+          .lineTo(
+            doc.page.width - 64,
+            competitionRowY - 8,
+          )
+          .strokeColor("#e5dfef")
+          .stroke();
+
+      }
+
+
+      doc
+        .fillColor("#6a3ea1")
+        .fontSize(11)
+        .text(
+          competition.name,
+          64,
+          competitionRowY,
+          {
+            width:
+              doc.page.width - 128,
+          },
+        );
+
+
+      doc
+        .fillColor("#6f7d78")
+        .fontSize(8)
+        .text(
+          schedule,
+          64,
+          competitionRowY + 18,
+          {
+            width:
+              doc.page.width - 128,
+          },
+        );
+
+
+      competitionRowY += 52;
+
+    },
+  );
+
+
+  doc
+    .fillColor("#000000");
+
+
+  doc.y =
+    competitionsY +
+    competitionCardHeight +
+    16;
+
+
   // --------------------------------------------------
-  // SCHEDULE NOTE
+  // SCHEDULE INFORMATION
   // --------------------------------------------------
 
   const hasUnscheduled =
@@ -592,16 +1038,63 @@ if (
         )?.date,
     );
 
+
   if (hasUnscheduled) {
-    doc.moveDown();
+
+    const scheduleNoteY =
+      doc.y;
+
 
     doc
-      .fontSize(10)
+      .roundedRect(
+        46,
+        scheduleNoteY,
+        doc.page.width - 92,
+        58,
+        12,
+      )
+      .fillAndStroke(
+        "#fff8e8",
+        "#eadcad",
+      );
+
+
+    doc
+      .fillColor("#9a690d")
+      .fontSize(9)
+      .text(
+        "SCHEDULE INFORMATION",
+        64,
+        scheduleNoteY + 12,
+        {
+          width: 180,
+        },
+      );
+
+
+    doc
+      .fillColor("#73571d")
+      .fontSize(9)
       .text(
         "Competition time and venue will be announced by the organiser based on the final participant schedule.",
+        64,
+        scheduleNoteY + 28,
+        {
+          width:
+            doc.page.width - 128,
+          lineGap: 2,
+        },
       );
-  }
 
+
+    doc
+      .fillColor("#000000");
+
+
+    doc.y =
+      scheduleNoteY + 72;
+
+  }
   // --------------------------------------------------
   // ORGANISER WISHES
   // --------------------------------------------------
@@ -730,8 +1223,16 @@ if (
   doc.y =
     wishY + 145;
   // --------------------------------------------------
-  // QR CODE
+  // QR PASS CARD
   // --------------------------------------------------
+
+  if (
+    doc.y >
+    doc.page.height - 230
+  ) {
+    doc.addPage();
+  }
+
 
   const qrImage =
     Buffer.from(
@@ -739,43 +1240,194 @@ if (
       "base64",
     );
 
-  doc.moveDown();
 
-  doc.image(
-    qrImage,
-    {
-      fit: [150, 150],
-      align: "center",
-    },
-  );
+  const qrCardY =
+    doc.y;
+
 
   doc
-    .fontSize(10)
+    .roundedRect(
+      46,
+      qrCardY,
+      doc.page.width - 92,
+      195,
+      14,
+    )
+    .fillAndStroke(
+      "#f4f8f6",
+      "#d2e4de",
+    );
+
+
+  doc
+    .fillColor("#153f35")
+    .fontSize(13)
     .text(
-      "Show this QR at event check-in.",
+      "Event Check-in QR",
+      64,
+      qrCardY + 16,
       {
+        width:
+          doc.page.width - 128,
         align: "center",
       },
     );
 
 
+  doc.image(
+    qrImage,
+    doc.page.width / 2 - 65,
+    qrCardY + 42,
+    {
+      fit: [130, 130],
+    },
+  );
+
+
+  doc
+    .fillColor("#6f7d78")
+    .fontSize(9)
+    .text(
+      "Show this QR at event check-in.",
+      64,
+      qrCardY + 172,
+      {
+        width:
+          doc.page.width - 128,
+        align: "center",
+      },
+    );
+
+
+  doc
+    .fillColor("#000000");
+
+
+  doc.y =
+    qrCardY + 210;
+
   // --------------------------------------------------
-  // INSTRUCTIONS
+  // INSTRUCTIONS + FOOTER
   // --------------------------------------------------
 
   if (
     state.settings
       .instructionsEn
   ) {
-    doc.moveDown();
+
+    if (
+      doc.y >
+      doc.page.height - 150
+    ) {
+      doc.addPage();
+    }
+
+
+    const instructionY =
+      doc.y;
+
 
     doc
-      .fontSize(9)
+      .roundedRect(
+        46,
+        instructionY,
+        doc.page.width - 92,
+        82,
+        12,
+      )
+      .fillAndStroke(
+        "#eef5f2",
+        "#d2e4de",
+      );
+
+
+    doc
+      .fillColor("#153f35")
+      .fontSize(10)
+      .text(
+        "IMPORTANT INSTRUCTIONS",
+        64,
+        instructionY + 14,
+        {
+          width:
+            doc.page.width - 128,
+        },
+      );
+
+
+    doc
+      .fillColor("#596761")
+      .fontSize(8.5)
       .text(
         state.settings
           .instructionsEn,
+        64,
+        instructionY + 32,
+        {
+          width:
+            doc.page.width - 128,
+          lineGap: 2,
+        },
       );
+
+
+    doc.y =
+      instructionY + 96;
+
   }
+
+
+  // --------------------------------------------------
+  // PASS FOOTER
+  // --------------------------------------------------
+
+  const footerY =
+    doc.y;
+
+
+  doc
+    .roundedRect(
+      46,
+      footerY,
+      doc.page.width - 92,
+      42,
+      10,
+    )
+    .fill("#153f35");
+
+
+  doc
+    .fillColor("#ffffff")
+    .fontSize(8)
+    .text(
+      "STAR GURU CHARITABLE FOUNDATION",
+      64,
+      footerY + 10,
+      {
+        width:
+          doc.page.width - 128,
+        align: "center",
+      },
+    );
+
+
+  doc
+    .fillColor("#dceae5")
+    .fontSize(7)
+    .text(
+      "Chithiram Thiruvila 2026 · In association with SBK VIBGYOR SCHOOL",
+      64,
+      footerY + 24,
+      {
+        width:
+          doc.page.width - 128,
+        align: "center",
+      },
+    );
+
+
+  doc
+    .fillColor("#000000");
 
 
   doc.end();
