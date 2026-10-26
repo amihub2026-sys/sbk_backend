@@ -1,9 +1,37 @@
 import { google } from "googleapis";
+
 import PDFDocument from "pdfkit";
+
 import QRCode from "qrcode";
 
 import mongoose from "mongoose";
+
+import fs from "node:fs";
+
+import path from "node:path";
+
+import { fileURLToPath } from "node:url";
+
 import { env } from "../config/env.js";
+
+
+const __filename =
+  fileURLToPath(
+    import.meta.url,
+  );
+
+
+const __dirname =
+  path.dirname(
+    __filename,
+  );
+
+
+const GURU_PHOTO_PATH =
+  path.join(
+    __dirname,
+    "../assets/guru-sammy-thiagarajan.png",
+  );
 
 async function readGridFsImage(value) {
   if (
@@ -232,7 +260,61 @@ function formatSchedule(
 
   return `${slot.date}, ${timeText}, ${slot.venue}`;
 }
+/* =========================================================
+   FESTIVAL WISH
+========================================================= */
 
+function getFestivalWish(
+  registration,
+) {
+
+  if (!registration?.createdAt) {
+
+    return {
+      title:
+        "Happy Children's Day!",
+      message:
+        "Wishing every child a joyful, confident and creative future.",
+    };
+
+  }
+
+
+  const registrationDate =
+    new Date(
+      registration.createdAt,
+    );
+
+
+  const diwaliCutoff =
+    new Date(
+      "2026-11-08T23:59:59.999+05:30",
+    );
+
+
+  if (
+    registrationDate.getTime() <=
+    diwaliCutoff.getTime()
+  ) {
+
+    return {
+      title:
+        "Happy Diwali!",
+      message:
+        "Warm wishes to all our young participants and families. May this festival bring happiness, creativity and success.",
+    };
+
+  }
+
+
+  return {
+    title:
+      "Happy Children's Day!",
+    message:
+      "Wishing every child a joyful, confident and creative future.",
+  };
+
+}
 
 export async function passPdf(
 
@@ -285,7 +367,20 @@ export async function passPdf(
       )
       .filter(Boolean);
 
+const festivalWish =
+  getFestivalWish(
+    registration,
+  );
 
+
+const guruPhoto =
+  fs.existsSync(
+    GURU_PHOTO_PATH,
+  )
+    ? fs.readFileSync(
+        GURU_PHOTO_PATH,
+      )
+    : null;
   const qr =
     await QRCode.toDataURL(
       registration.qrToken,
@@ -507,7 +602,133 @@ if (
       );
   }
 
+  // --------------------------------------------------
+  // ORGANISER WISHES
+  // --------------------------------------------------
 
+  if (
+    doc.y >
+    doc.page.height - 250
+  ) {
+    doc.addPage();
+  }
+
+
+  doc.moveDown(1);
+
+
+  const wishY =
+    doc.y;
+
+
+  doc
+    .roundedRect(
+      46,
+      wishY,
+      doc.page.width - 92,
+      135,
+      14,
+    )
+    .fillAndStroke(
+      "#fff8df",
+      "#e8cf93",
+    );
+
+
+  if (guruPhoto) {
+
+    try {
+
+      doc.image(
+        guruPhoto,
+        62,
+        wishY + 18,
+        {
+          fit: [95, 95],
+          align: "center",
+          valign: "center",
+        },
+      );
+
+    } catch {
+      // Guru photo is optional.
+    }
+
+  }
+
+
+  doc
+    .fillColor("#9a690d")
+    .fontSize(8)
+    .text(
+      "WISHES FROM",
+      180,
+      wishY + 18,
+      {
+        width: 320,
+      },
+    );
+
+
+  doc
+    .fillColor("#123f34")
+    .fontSize(16)
+    .text(
+      "Guru Sammy Thiagarajan",
+      180,
+      wishY + 34,
+      {
+        width: 320,
+      },
+    );
+
+
+  doc
+    .fillColor("#a16c09")
+    .fontSize(8)
+    .text(
+      "STAR GURU CHARITABLE FOUNDATION",
+      180,
+      wishY + 57,
+      {
+        width: 320,
+      },
+    );
+
+
+  doc
+    .fillColor("#b06f00")
+    .fontSize(13)
+    .text(
+      festivalWish.title,
+      180,
+      wishY + 78,
+      {
+        width: 320,
+      },
+    );
+
+
+  doc
+    .fillColor("#596761")
+    .fontSize(9)
+    .text(
+      festivalWish.message,
+      180,
+      wishY + 98,
+      {
+        width: 320,
+        lineGap: 2,
+      },
+    );
+
+
+  doc
+    .fillColor("#000000");
+
+
+  doc.y =
+    wishY + 145;
   // --------------------------------------------------
   // QR CODE
   // --------------------------------------------------
