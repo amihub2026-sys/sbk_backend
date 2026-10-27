@@ -142,9 +142,18 @@ export const offlineRegistrationSchema = z.object({
     )
     .optional(),
 
-  paymentPaid: z
-    .boolean()
-    .default(false),
+paymentPaid: z
+  .boolean()
+  .default(false),
+
+amountPaid: z
+  .coerce
+  .number()
+  .min(
+    0,
+    "Amount paid cannot be negative.",
+  )
+  .default(0),
 });
 
 
