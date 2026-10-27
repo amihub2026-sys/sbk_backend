@@ -23,10 +23,38 @@ export async function razorpayWebhook(req, res) {
     if (r) {
       r.payment = "Paid";
       await r.save();
-      await PaymentRecord.findOneAndUpdate(
-        { providerRef },
-        { $set: { status: "Paid", raw: payload } },
-      );
+     const paymentEntity =
+  payload?.payload?.payment?.entity || {};
+
+await PaymentRecord.findOneAndUpdate(
+  { providerRef },
+  {
+    $set: {
+      status: "Paid",
+
+      transactionId:
+        paymentEntity.id || "",
+
+      providerOrderId:
+        paymentEntity.order_id || "",
+
+      paymentMethod:
+        paymentEntity.method || "",
+
+      paidAt:
+        paymentEntity.created_at
+          ? new Date(
+              Number(paymentEntity.created_at) * 1000,
+            )
+          : new Date(),
+
+      verifiedAt:
+        new Date(),
+
+      raw: payload,
+    },
+  },
+);
     }
   }
   res.json({ ok: true });
