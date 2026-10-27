@@ -30,7 +30,7 @@ const __dirname =
 const GURU_PHOTO_PATH =
   path.join(
     __dirname,
-    "../assets/guru-sammy-thiagarajan.png",
+    "../assets/guru-sammy-thiagarajan.jpg",
   );
 const STAR_GURU_LOGO_PATH =
   path.join(
