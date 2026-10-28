@@ -569,33 +569,25 @@ export async function passPdf(
       "#d9e3de",
     );
 
-  if (studentPhoto) {
-    try {
-      doc.image(
-        studentPhoto,
-        left + 15,
-        y + 14,
-        {
-          fit: [78, 78],
-          align: "center",
-          valign: "center",
-        },
-      );
-    } catch {}
-  } else {
-    doc
-      .roundedRect(
-        left + 15,
-        y + 14,
-        78,
-        78,
-        8,
-      )
-      .fill("#eef3f1");
-  }
+if (studentPhoto) {
+  try {
+    doc.image(
+      studentPhoto,
+      left + 15,
+      y + 14,
+      {
+        fit: [78, 78],
+        align: "center",
+        valign: "center",
+      },
+    );
+  } catch {}
+}
 
-  const detailX =
-    left + 112;
+const detailX =
+  studentPhoto
+    ? left + 112
+    : left + 22;
 
   doc
     .font("Helvetica-Bold")
@@ -623,8 +615,10 @@ export async function passPdf(
       },
     );
 
-  const column2 =
-    detailX + 180;
+const column2 =
+  studentPhoto
+    ? detailX + 180
+    : left + 270;
 
   doc
     .fillColor("#6f7d78")
