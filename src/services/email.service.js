@@ -30,7 +30,7 @@ const __dirname =
 const GURU_PHOTO_PATH =
   path.join(
     __dirname,
-    "../assets/guru-sammy-thiagarajan.jpg",
+    "../assets/guru-sammy-thiagarajan.jpeg",
   );
 const STAR_GURU_LOGO_PATH =
   path.join(
@@ -321,7 +321,6 @@ function getFestivalWish(
 }
 
 export async function passPdf(
-
   registration,
   state,
 ) {
@@ -329,7 +328,7 @@ export async function passPdf(
 
   const doc = new PDFDocument({
     size: "A4",
-    margin: 46,
+    margin: 0,
   });
 
   doc.on(
@@ -337,697 +336,562 @@ export async function passPdf(
     (chunk) => chunks.push(chunk),
   );
 
-  const done =
-    new Promise((resolve) =>
-      doc.on(
-        "end",
-        () =>
-          resolve(
-            Buffer.concat(chunks),
-          ),
-      ),
-    );
-
+  const done = new Promise((resolve) =>
+    doc.on("end", () =>
+      resolve(Buffer.concat(chunks)),
+    ),
+  );
 
   const category =
     state.categories.find(
-      (category) =>
-        String(category.id) ===
-        String(
-          registration.categoryId,
-        ),
+      (item) =>
+        String(item.id) ===
+        String(registration.categoryId),
     );
-
 
   const competitions =
     registration.competitionIds
       .map((id) =>
         state.competitions.find(
           (competition) =>
-            String(
-              competition.id,
-            ) === String(id),
+            String(competition.id) ===
+            String(id),
         ),
       )
       .filter(Boolean);
 
-const festivalWish =
-  getFestivalWish(
-    registration,
-  );
+  const festivalWish =
+    getFestivalWish(registration);
 
+  const guruPhoto =
+    fs.existsSync(GURU_PHOTO_PATH)
+      ? fs.readFileSync(GURU_PHOTO_PATH)
+      : null;
 
-const guruPhoto =
-  fs.existsSync(
-    GURU_PHOTO_PATH,
-  )
-    ? fs.readFileSync(
-        GURU_PHOTO_PATH,
-      )
-    : null;
-    const starGuruLogo =
-  fs.existsSync(
-    STAR_GURU_LOGO_PATH,
-  )
-    ? fs.readFileSync(
-        STAR_GURU_LOGO_PATH,
-      )
-    : null;
-  const qr =
-    await QRCode.toDataURL(
-      registration.qrToken,
-      {
-        width: 320,
-        margin: 1,
-      },
-    );
-
-
-  // --------------------------------------------------
-  // COLORFUL PASS HEADER
-  // --------------------------------------------------
-
-  const headerX = 46;
-  const headerY = 46;
-  const headerWidth =
-    doc.page.width - 92;
-  const headerHeight = 125;
-
-
-  doc
-    .roundedRect(
-      headerX,
-      headerY,
-      headerWidth,
-      headerHeight,
-      18,
-    )
-    .fill("#153f35");
-
-
-  // STAR GURU LOGO
-
-  if (starGuruLogo) {
-
-    try {
-
-      doc.image(
-        starGuruLogo,
-        headerX + 165,
-        headerY + 12,
-        {
-          fit: [125, 48],
-          align: "center",
-        },
-      );
-
-    } catch {
-      // Logo is optional.
-    }
-
-  }
-
-
-  doc
-    .fillColor("#f4d98a")
-    .fontSize(8)
-    .text(
-      "EVENT ORGANISED BY",
-      headerX + 20,
-      headerY + 58,
-      {
-        width:
-          headerWidth - 40,
-        align: "center",
-      },
-    );
-
-
-  doc
-    .fillColor("#ffffff")
-    .fontSize(14)
-    .text(
-      "STAR GURU CHARITABLE FOUNDATION",
-      headerX + 20,
-      headerY + 70,
-      {
-        width:
-          headerWidth - 40,
-        align: "center",
-      },
-    );
-
-
-  doc
-    .fillColor("#f7d37a")
-    .fontSize(17)
-    .text(
-      state.settings.title ||
-        "Chithiram Thiruvila 2026",
-      headerX + 20,
-      headerY + 91,
-      {
-        width:
-          headerWidth - 40,
-        align: "center",
-      },
-    );
-
-
-  doc
-    .fillColor("#dceae5")
-    .fontSize(9)
-    .text(
-      "In association with SBK VIBGYOR SCHOOL",
-      headerX + 20,
-      headerY + 112,
-      {
-        width:
-          headerWidth - 40,
-        align: "center",
-      },
-    );
-
-
-  doc
-    .fillColor("#000000");
-
-
-  doc.y =
-    headerY +
-    headerHeight +
-    22;
-
-
-  // --------------------------------------------------
-  // APPLICATION NUMBER CARD
-  // --------------------------------------------------
-
-  const applicationY =
-    doc.y;
-
-
-  doc
-    .roundedRect(
-      46,
-      applicationY,
-      doc.page.width - 92,
-      62,
-      12,
-    )
-    .fillAndStroke(
-      "#f7f9f7",
-      "#d9e3de",
-    );
-
-
-  doc
-    .fillColor("#6f7d78")
-    .fontSize(8)
-    .text(
-      "APPLICATION NUMBER",
-      64,
-      applicationY + 13,
-      {
-        width: 250,
-      },
-    );
-
-
-  doc
-    .fillColor("#153f35")
-    .fontSize(21)
-    .text(
-      registration.applicationNo,
-      64,
-      applicationY + 28,
-      {
-        width: 300,
-      },
-    );
-
-
-  doc
-    .fillColor("#176b43")
-    .fontSize(9)
-    .text(
-      "REGISTRATION PASS",
-      doc.page.width - 185,
-      applicationY + 24,
-      {
-        width: 120,
-        align: "center",
-      },
-    );
-
-
-  doc
-    .fillColor("#000000");
-
-
-  doc.y =
-    applicationY + 78;
-
-
-
-
-  // --------------------------------------------------
-  // STUDENT DETAILS CARD
-  // --------------------------------------------------
-
-  const studentY =
-    doc.y;
-
-
-  doc
-    .roundedRect(
-      46,
-      studentY,
-      doc.page.width - 92,
-      170,
-      14,
-    )
-    .fillAndStroke(
-      "#ffffff",
-      "#d9e3de",
-    );
-
+  const starGuruLogo =
+    fs.existsSync(STAR_GURU_LOGO_PATH)
+      ? fs.readFileSync(STAR_GURU_LOGO_PATH)
+      : null;
 
   let studentPhoto = null;
-
 
   if (
     registration.photo?.startsWith(
       env.mediaPublicPath + "/",
     )
   ) {
-
     studentPhoto =
       await readGridFsImage(
         registration.photo,
       );
-
   }
 
+  const qr = await QRCode.toDataURL(
+    registration.qrToken,
+    {
+      width: 300,
+      margin: 1,
+    },
+  );
+
+  const qrImage = Buffer.from(
+    qr.split(",")[1],
+    "base64",
+  );
+
+  const pageWidth = doc.page.width;
+
+  const left = 34;
+  const contentWidth =
+    pageWidth - 68;
+
+  let y = 28;
+
+  /*
+   * ==========================================
+   * HEADER
+   * ==========================================
+   */
+
+  doc
+    .roundedRect(
+      left,
+      y,
+      contentWidth,
+      88,
+      14,
+    )
+    .fill("#153f35");
+
+  if (starGuruLogo) {
+    try {
+      doc.image(
+        starGuruLogo,
+        pageWidth / 2 - 40,
+        y + 5,
+        {
+          fit: [80, 27],
+        },
+      );
+    } catch {}
+  }
+
+  doc
+    .font("Helvetica")
+    .fillColor("#f4d98a")
+    .fontSize(6.5)
+    .text(
+      "EVENT ORGANISED BY",
+      left + 20,
+      y + 34,
+      {
+        width: contentWidth - 40,
+        align: "center",
+      },
+    );
+
+  doc
+    .font("Helvetica-Bold")
+    .fillColor("#ffffff")
+    .fontSize(11)
+    .text(
+      "STAR GURU CHARITABLE FOUNDATION",
+      left + 20,
+      y + 45,
+      {
+        width: contentWidth - 40,
+        align: "center",
+      },
+    );
+
+  doc
+    .fillColor("#f7d37a")
+    .fontSize(14)
+    .text(
+      state.settings.title ||
+        "Chithiram Thiruvila 2026",
+      left + 20,
+      y + 61,
+      {
+        width: contentWidth - 40,
+        align: "center",
+      },
+    );
+
+  doc
+    .font("Helvetica")
+    .fillColor("#dceae5")
+    .fontSize(7)
+    .text(
+      "In association with SBK VIBGYOR SCHOOL",
+      left + 20,
+      y + 77,
+      {
+        width: contentWidth - 40,
+        align: "center",
+      },
+    );
+
+  y += 98;
+
+  /*
+   * ==========================================
+   * APPLICATION NUMBER
+   * ==========================================
+   */
+
+  doc
+    .roundedRect(
+      left,
+      y,
+      contentWidth,
+      44,
+      9,
+    )
+    .fillAndStroke(
+      "#f7f9f7",
+      "#d9e3de",
+    );
+
+  doc
+    .font("Helvetica")
+    .fillColor("#6f7d78")
+    .fontSize(6.5)
+    .text(
+      "APPLICATION NUMBER",
+      left + 16,
+      y + 8,
+    );
+
+  doc
+    .font("Helvetica-Bold")
+    .fillColor("#153f35")
+    .fontSize(17)
+    .text(
+      registration.applicationNo,
+      left + 16,
+      y + 19,
+    );
+
+  doc
+    .fillColor("#176b43")
+    .fontSize(8)
+    .text(
+      "REGISTRATION PASS",
+      pageWidth - 180,
+      y + 18,
+      {
+        width: 125,
+        align: "center",
+      },
+    );
+
+  y += 52;
+
+  /*
+   * ==========================================
+   * STUDENT DETAILS
+   * ==========================================
+   */
+
+  const studentHeight = 112;
+
+  doc
+    .roundedRect(
+      left,
+      y,
+      contentWidth,
+      studentHeight,
+      10,
+    )
+    .fillAndStroke(
+      "#ffffff",
+      "#d9e3de",
+    );
 
   if (studentPhoto) {
-
     try {
-
       doc.image(
         studentPhoto,
-        64,
-        studentY + 22,
+        left + 15,
+        y + 14,
         {
-          fit: [95, 95],
+          fit: [78, 78],
           align: "center",
           valign: "center",
         },
       );
-
-    } catch {
-      // Student photo is optional.
-    }
-
+    } catch {}
+  } else {
+    doc
+      .roundedRect(
+        left + 15,
+        y + 14,
+        78,
+        78,
+        8,
+      )
+      .fill("#eef3f1");
   }
 
+  const detailX =
+    left + 112;
 
   doc
+    .font("Helvetica-Bold")
     .fillColor("#153f35")
-    .fontSize(17)
+    .fontSize(14)
     .text(
       registration.name,
-      180,
-      studentY + 22,
+      detailX,
+      y + 13,
       {
         width: 330,
       },
     );
 
-
   doc
+    .font("Helvetica")
     .fillColor("#6f7d78")
-    .fontSize(10)
+    .fontSize(8)
     .text(
       registration.school || "",
-      180,
-      studentY + 47,
+      detailX,
+      y + 32,
       {
         width: 330,
       },
     );
 
+  const column2 =
+    detailX + 180;
 
   doc
     .fillColor("#6f7d78")
-    .fontSize(8)
+    .fontSize(6.5)
     .text(
       "FATHER NAME",
-      180,
-      studentY + 78,
-    );
-
-
-  doc
-    .fillColor("#1f2d29")
-    .fontSize(10)
-    .text(
-      registration.fatherName || "-",
-      180,
-      studentY + 91,
-      {
-        width: 150,
-      },
-    );
-
-
-  doc
-    .fillColor("#6f7d78")
-    .fontSize(8)
+      detailX,
+      y + 52,
+    )
     .text(
       "CATEGORY",
-      355,
-      studentY + 78,
+      column2,
+      y + 52,
     );
 
-
   doc
+    .font("Helvetica-Bold")
     .fillColor("#1f2d29")
-    .fontSize(10)
+    .fontSize(8.5)
+    .text(
+      registration.fatherName || "-",
+      detailX,
+      y + 63,
+      {
+        width: 160,
+      },
+    )
     .text(
       category?.name || "-",
-      355,
-      studentY + 91,
+      column2,
+      y + 63,
       {
-        width: 150,
+        width: 145,
       },
     );
 
-
   doc
+    .font("Helvetica")
     .fillColor("#6f7d78")
-    .fontSize(8)
+    .fontSize(6.5)
     .text(
       "MOBILE",
-      180,
-      studentY + 119,
+      detailX,
+      y + 82,
+    )
+    .text(
+      "EMAIL",
+      column2,
+      y + 82,
     );
 
-
   doc
+    .font("Helvetica-Bold")
     .fillColor("#1f2d29")
-    .fontSize(10)
+    .fontSize(8)
     .text(
       registration.phone || "-",
-      180,
-      studentY + 132,
+      detailX,
+      y + 93,
+      {
+        width: 160,
+      },
+    )
+    .fontSize(7.5)
+    .text(
+      registration.email || "-",
+      column2,
+      y + 93,
       {
         width: 150,
       },
     );
 
+  y += studentHeight + 8;
 
-  doc
-    .fillColor("#6f7d78")
-    .fontSize(8)
-    .text(
-      "EMAIL",
-      355,
-      studentY + 119,
+  /*
+   * ==========================================
+   * PAYMENT DETAILS
+   * ==========================================
+   */
+
+  const amountPaid =
+    Number(
+      registration.amountPaid ||
+      registration.total ||
+      0,
     );
-
-
-  doc
-    .fillColor("#1f2d29")
-    .fontSize(9)
-    .text(
-      registration.email || "-",
-      355,
-      studentY + 132,
-      {
-        width: 155,
-      },
-    );
-
-
-  doc
-    .fillColor("#000000");
-
-
-  doc.y =
-    studentY + 190;
-
-    // --------------------------------------------------
-  // PAYMENT DETAILS CARD
-  // --------------------------------------------------
-
-  const paymentY =
-    doc.y;
-
 
   doc
     .roundedRect(
-      46,
-      paymentY,
-      doc.page.width - 92,
-      112,
-      14,
+      left,
+      y,
+      contentWidth,
+      66,
+      10,
     )
     .fillAndStroke(
       "#eef7f2",
       "#c7dfcf",
     );
 
-
   doc
-    .fillColor("#176b43")
-    .fontSize(13)
-    .text(
-      "Payment Details",
-      64,
-      paymentY + 16,
-      {
-        width: 220,
-      },
-    );
-
-
-  doc
-    .fillColor("#6f7d78")
-    .fontSize(8)
-    .text(
-      "PAYMENT STATUS",
-      64,
-      paymentY + 46,
-    );
-
-
-  doc
-    .fillColor("#1f2d29")
-    .fontSize(10)
-    .text(
-      registration.payment || "-",
-      64,
-      paymentY + 59,
-    );
-
-
-  doc
-    .fillColor("#6f7d78")
-    .fontSize(8)
-    .text(
-      "PAYMENT METHOD",
-      210,
-      paymentY + 46,
-    );
-
-
-  doc
-    .fillColor("#1f2d29")
-    .fontSize(10)
-    .text(
-      registration.paymentMethod || "-",
-      210,
-      paymentY + 59,
-    );
-
-
-  doc
-    .fillColor("#6f7d78")
-    .fontSize(8)
-    .text(
-      "AMOUNT PAID",
-      355,
-      paymentY + 46,
-    );
-
-
-  doc
-    .fillColor("#1f2d29")
-    .fontSize(10)
-    .text(
-      `Rs. ${Number(
-        registration.total || 0,
-      ).toFixed(2)}`,
-      355,
-      paymentY + 59,
-    );
-
-
-  doc
-    .fillColor("#6f7d78")
-    .fontSize(8)
-    .text(
-      "REGISTRATION STATUS",
-      64,
-      paymentY + 82,
-    );
-
-
-  doc
+    .font("Helvetica-Bold")
     .fillColor("#176b43")
     .fontSize(10)
     .text(
-      registration.registrationStatus ||
+      "PAYMENT DETAILS",
+      left + 16,
+      y + 10,
+    );
+
+  const paymentColumns = [
+    {
+      label: "STATUS",
+      value:
+        registration.payment || "-",
+      x: left + 16,
+    },
+    {
+      label: "METHOD",
+      value:
+        registration.paymentMethod ||
+        "-",
+      x: left + 135,
+    },
+    {
+      label: "AMOUNT PAID",
+      value:
+        `Rs. ${amountPaid.toFixed(2)}`,
+      x: left + 255,
+    },
+    {
+      label: "REGISTRATION",
+      value:
+        registration.registrationStatus ||
         "Confirmed",
-      210,
-      paymentY + 82,
-    );
+      x: left + 390,
+    },
+  ];
 
+  paymentColumns.forEach((item) => {
+    doc
+      .font("Helvetica")
+      .fillColor("#6f7d78")
+      .fontSize(6)
+      .text(
+        item.label,
+        item.x,
+        y + 32,
+        {
+          width: 105,
+        },
+      );
 
-  doc
-    .fillColor("#000000");
+    doc
+      .font("Helvetica-Bold")
+      .fillColor("#1f2d29")
+      .fontSize(8)
+      .text(
+        item.value,
+        item.x,
+        y + 44,
+        {
+          width: 105,
+        },
+      );
+  });
 
+  y += 74;
 
-  doc.y =
-    paymentY + 132;
+  /*
+   * ==========================================
+   * COMPETITIONS
+   * ==========================================
+   */
 
-  // --------------------------------------------------
-  // COMPETITIONS CARD
-  // --------------------------------------------------
-
-  if (
-    doc.y >
-    doc.page.height - 220
-  ) {
-    doc.addPage();
-  }
-
-
-  const competitionsY =
-    doc.y;
-
-
-  const competitionCardHeight =
-    60 +
-    competitions.length * 52;
-
+  const competitionHeight =
+    42 +
+    competitions.length * 30;
 
   doc
     .roundedRect(
-      46,
-      competitionsY,
-      doc.page.width - 92,
-      competitionCardHeight,
-      14,
+      left,
+      y,
+      contentWidth,
+      competitionHeight,
+      10,
     )
     .fillAndStroke(
       "#f8f5ff",
       "#ddd3ef",
     );
 
-
   doc
+    .font("Helvetica-Bold")
     .fillColor("#153f35")
-    .fontSize(14)
+    .fontSize(10)
     .text(
-      "Competitions",
-      64,
-      competitionsY + 16,
-      {
-        width: 220,
-      },
+      "COMPETITIONS",
+      left + 16,
+      y + 11,
     );
 
-
-  let competitionRowY =
-    competitionsY + 46;
-
+  let rowY =
+    y + 31;
 
   competitions.forEach(
     (competition, index) => {
 
-      const schedule =
-        formatSchedule(
-          competition,
-          state,
-        );
-
-
       if (index > 0) {
-
         doc
           .moveTo(
-            64,
-            competitionRowY - 8,
+            left + 16,
+            rowY - 5,
           )
           .lineTo(
-            doc.page.width - 64,
-            competitionRowY - 8,
+            left +
+              contentWidth -
+              16,
+            rowY - 5,
           )
           .strokeColor("#e5dfef")
           .stroke();
-
       }
 
-
       doc
+        .font("Helvetica-Bold")
         .fillColor("#6a3ea1")
-        .fontSize(11)
+        .fontSize(8.5)
         .text(
           competition.name,
-          64,
-          competitionRowY,
+          left + 16,
+          rowY,
           {
-            width:
-              doc.page.width - 128,
+            width: 190,
           },
         );
-
 
       doc
+        .font("Helvetica")
         .fillColor("#6f7d78")
-        .fontSize(8)
+        .fontSize(7)
         .text(
-          schedule,
-          64,
-          competitionRowY + 18,
+          formatSchedule(
+            competition,
+            state,
+          ),
+          left + 220,
+          rowY,
           {
             width:
-              doc.page.width - 128,
+              contentWidth - 236,
+            align: "right",
           },
         );
 
-
-      competitionRowY += 52;
-
+      rowY += 30;
     },
   );
 
+  y += competitionHeight + 8;
 
-  doc
-    .fillColor("#000000");
-
-
-  doc.y =
-    competitionsY +
-    competitionCardHeight +
-    16;
-
-
-  // --------------------------------------------------
-  // SCHEDULE INFORMATION
-  // --------------------------------------------------
+  /*
+   * ==========================================
+   * SCHEDULE NOTE
+   * ==========================================
+   */
 
   const hasUnscheduled =
     competitions.some(
@@ -1038,404 +902,301 @@ const guruPhoto =
         )?.date,
     );
 
-
   if (hasUnscheduled) {
-
-    const scheduleNoteY =
-      doc.y;
-
 
     doc
       .roundedRect(
-        46,
-        scheduleNoteY,
-        doc.page.width - 92,
-        58,
-        12,
+        left,
+        y,
+        contentWidth,
+        38,
+        8,
       )
       .fillAndStroke(
         "#fff8e8",
         "#eadcad",
       );
 
-
     doc
+      .font("Helvetica-Bold")
       .fillColor("#9a690d")
-      .fontSize(9)
+      .fontSize(7)
       .text(
         "SCHEDULE INFORMATION",
-        64,
-        scheduleNoteY + 12,
-        {
-          width: 180,
-        },
+        left + 14,
+        y + 8,
       );
 
-
     doc
+      .font("Helvetica")
       .fillColor("#73571d")
-      .fontSize(9)
+      .fontSize(7)
       .text(
         "Competition time and venue will be announced by the organiser based on the final participant schedule.",
-        64,
-        scheduleNoteY + 28,
+        left + 14,
+        y + 20,
         {
           width:
-            doc.page.width - 128,
-          lineGap: 2,
+            contentWidth - 28,
         },
       );
 
-
-    doc
-      .fillColor("#000000");
-
-
-    doc.y =
-      scheduleNoteY + 72;
-
-  }
-  // --------------------------------------------------
-  // ORGANISER WISHES
-  // --------------------------------------------------
-
-  if (
-    doc.y >
-    doc.page.height - 250
-  ) {
-    doc.addPage();
+    y += 46;
   }
 
-
-  doc.moveDown(1);
-
-
-  const wishY =
-    doc.y;
-
+  /*
+   * ==========================================
+   * GURU WISH
+   * ==========================================
+   */
 
   doc
     .roundedRect(
-      46,
-      wishY,
-      doc.page.width - 92,
-      135,
-      14,
+      left,
+      y,
+      contentWidth,
+      82,
+      10,
     )
     .fillAndStroke(
       "#fff8df",
       "#e8cf93",
     );
 
-
   if (guruPhoto) {
-
     try {
-
       doc.image(
         guruPhoto,
-        62,
-        wishY + 18,
+        left + 14,
+        y + 11,
         {
-          fit: [95, 95],
-          align: "center",
-          valign: "center",
+          fit: [60, 60],
         },
       );
-
-    } catch {
-      // Guru photo is optional.
-    }
-
+    } catch {}
   }
 
+  const wishX =
+    left + 92;
 
   doc
+    .font("Helvetica")
     .fillColor("#9a690d")
-    .fontSize(8)
+    .fontSize(6)
     .text(
       "WISHES FROM",
-      180,
-      wishY + 18,
-      {
-        width: 320,
-      },
+      wishX,
+      y + 10,
     );
-
 
   doc
+    .font("Helvetica-Bold")
     .fillColor("#123f34")
-    .fontSize(16)
+    .fontSize(10)
     .text(
       "Guru Sammy Thiagarajan",
-      180,
-      wishY + 34,
-      {
-        width: 320,
-      },
+      wishX,
+      y + 20,
     );
-
 
   doc
     .fillColor("#a16c09")
-    .fontSize(8)
+    .fontSize(6.5)
     .text(
       "STAR GURU CHARITABLE FOUNDATION",
-      180,
-      wishY + 57,
-      {
-        width: 320,
-      },
+      wishX,
+      y + 34,
     );
-
 
   doc
     .fillColor("#b06f00")
-    .fontSize(13)
+    .fontSize(9)
     .text(
       festivalWish.title,
-      180,
-      wishY + 78,
+      wishX,
+      y + 47,
+    );
+
+  doc
+    .font("Helvetica")
+    .fillColor("#596761")
+    .fontSize(6.5)
+    .text(
+      festivalWish.message,
+      wishX + 120,
+      y + 47,
       {
-        width: 320,
+        width: 285,
+        lineGap: 1,
       },
     );
 
+  y += 90;
+
+  /*
+   * ==========================================
+   * INSTRUCTIONS + QR
+   * ==========================================
+   */
+
+  const lowerHeight = 122;
+
+  const instructionWidth =
+    contentWidth - 160;
 
   doc
-    .fillColor("#596761")
-    .fontSize(9)
+    .roundedRect(
+      left,
+      y,
+      instructionWidth,
+      lowerHeight,
+      10,
+    )
+    .fillAndStroke(
+      "#eef5f2",
+      "#d2e4de",
+    );
+
+  doc
+    .font("Helvetica-Bold")
+    .fillColor("#153f35")
+    .fontSize(8.5)
     .text(
-      festivalWish.message,
-      180,
-      wishY + 98,
+      "IMPORTANT INSTRUCTIONS",
+      left + 14,
+      y + 13,
+    );
+
+  doc
+    .font("Helvetica")
+    .fillColor("#596761")
+    .fontSize(7)
+    .text(
+      state.settings.instructionsEn ||
+        "",
+      left + 14,
+      y + 31,
       {
-        width: 320,
+        width:
+          instructionWidth - 28,
         lineGap: 2,
       },
     );
 
+  const qrX =
+    left +
+    instructionWidth +
+    8;
 
-  doc
-    .fillColor("#000000");
-
-
-  doc.y =
-    wishY + 145;
-  // --------------------------------------------------
-  // QR PASS CARD
-  // --------------------------------------------------
-
-  if (
-    doc.y >
-    doc.page.height - 230
-  ) {
-    doc.addPage();
-  }
-
-
-  const qrImage =
-    Buffer.from(
-      qr.split(",")[1],
-      "base64",
-    );
-
-
-  const qrCardY =
-    doc.y;
-
+  const qrWidth =
+    contentWidth -
+    instructionWidth -
+    8;
 
   doc
     .roundedRect(
-      46,
-      qrCardY,
-      doc.page.width - 92,
-      195,
-      14,
+      qrX,
+      y,
+      qrWidth,
+      lowerHeight,
+      10,
     )
     .fillAndStroke(
       "#f4f8f6",
       "#d2e4de",
     );
 
-
   doc
+    .font("Helvetica-Bold")
     .fillColor("#153f35")
-    .fontSize(13)
+    .fontSize(7.5)
     .text(
-      "Event Check-in QR",
-      64,
-      qrCardY + 16,
+      "EVENT CHECK-IN QR",
+      qrX + 8,
+      y + 9,
       {
-        width:
-          doc.page.width - 128,
+        width: qrWidth - 16,
         align: "center",
       },
     );
-
 
   doc.image(
     qrImage,
-    doc.page.width / 2 - 65,
-    qrCardY + 42,
+    qrX +
+      qrWidth / 2 -
+      39,
+    y + 27,
     {
-      fit: [130, 130],
+      fit: [78, 78],
     },
   );
 
-
   doc
+    .font("Helvetica")
     .fillColor("#6f7d78")
-    .fontSize(9)
+    .fontSize(5.8)
     .text(
-      "Show this QR at event check-in.",
-      64,
-      qrCardY + 172,
+      "Show this QR at check-in",
+      qrX + 6,
+      y + 107,
       {
-        width:
-          doc.page.width - 128,
+        width: qrWidth - 12,
         align: "center",
       },
     );
 
+  y += lowerHeight + 8;
 
-  doc
-    .fillColor("#000000");
-
-
-  doc.y =
-    qrCardY + 210;
-
-  // --------------------------------------------------
-  // INSTRUCTIONS + FOOTER
-  // --------------------------------------------------
-
-  if (
-    state.settings
-      .instructionsEn
-  ) {
-
-    if (
-      doc.y >
-      doc.page.height - 150
-    ) {
-      doc.addPage();
-    }
-
-
-    const instructionY =
-      doc.y;
-
-
-    doc
-      .roundedRect(
-        46,
-        instructionY,
-        doc.page.width - 92,
-        82,
-        12,
-      )
-      .fillAndStroke(
-        "#eef5f2",
-        "#d2e4de",
-      );
-
-
-    doc
-      .fillColor("#153f35")
-      .fontSize(10)
-      .text(
-        "IMPORTANT INSTRUCTIONS",
-        64,
-        instructionY + 14,
-        {
-          width:
-            doc.page.width - 128,
-        },
-      );
-
-
-    doc
-      .fillColor("#596761")
-      .fontSize(8.5)
-      .text(
-        state.settings
-          .instructionsEn,
-        64,
-        instructionY + 32,
-        {
-          width:
-            doc.page.width - 128,
-          lineGap: 2,
-        },
-      );
-
-
-    doc.y =
-      instructionY + 96;
-
-  }
-
-
-  // --------------------------------------------------
-  // PASS FOOTER
-  // --------------------------------------------------
-
-  const footerY =
-    doc.y;
-
+  /*
+   * ==========================================
+   * FOOTER
+   * ==========================================
+   */
 
   doc
     .roundedRect(
-      46,
-      footerY,
-      doc.page.width - 92,
-      42,
-      10,
+      left,
+      y,
+      contentWidth,
+      34,
+      8,
     )
     .fill("#153f35");
 
-
   doc
+    .font("Helvetica-Bold")
     .fillColor("#ffffff")
-    .fontSize(8)
-    .text(
-      "STAR GURU CHARITABLE FOUNDATION",
-      64,
-      footerY + 10,
-      {
-        width:
-          doc.page.width - 128,
-        align: "center",
-      },
-    );
-
-
-  doc
-    .fillColor("#dceae5")
     .fontSize(7)
     .text(
-      "Chithiram Thiruvila 2026 · In association with SBK VIBGYOR SCHOOL",
-      64,
-      footerY + 24,
+      "STAR GURU CHARITABLE FOUNDATION",
+      left + 15,
+      y + 8,
       {
         width:
-          doc.page.width - 128,
+          contentWidth - 30,
         align: "center",
       },
     );
 
-
   doc
-    .fillColor("#000000");
-
+    .font("Helvetica")
+    .fillColor("#dceae5")
+    .fontSize(6)
+    .text(
+      "Chithiram Thiruvila 2026 · In association with SBK VIBGYOR SCHOOL",
+      left + 15,
+      y + 19,
+      {
+        width:
+          contentWidth - 30,
+        align: "center",
+      },
+    );
 
   doc.end();
 
   return done;
 }
-
-
 export async function sendPassEmail(
   registration,
   state,
