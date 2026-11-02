@@ -794,12 +794,114 @@ const column2 =
    * COMPETITIONS
    * ==========================================
    */
-const competitionRowHeight = 64;
+const competitionTextWidth =
+  contentWidth - 32;
+
+const instructionFontSize =
+  competitions.length > 1
+    ? 5.4
+    : 6;
+
+const competitionRows =
+  competitions.map(
+    (competition) => {
+
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(8.2);
+
+      const nameHeight =
+        doc.heightOfString(
+          competition.name || "",
+          {
+            width:
+              competitionTextWidth,
+          },
+        );
+
+      let topicHeight = 0;
+
+      if (competition.topicEn) {
+        doc
+          .font("Helvetica-Bold")
+          .fontSize(6.2);
+
+        topicHeight =
+          doc.heightOfString(
+            `Topic: ${competition.topicEn}`,
+            {
+              width:
+                competitionTextWidth,
+            },
+          );
+      }
+
+      let instructionHeight = 0;
+
+      if (competition.instructions) {
+        doc
+          .font("Helvetica")
+          .fontSize(
+            instructionFontSize,
+          );
+
+        instructionHeight =
+          doc.heightOfString(
+            `Instructions: ${competition.instructions}`,
+            {
+              width:
+                competitionTextWidth,
+              lineGap: 0,
+            },
+          );
+      }
+
+      doc
+        .font("Helvetica")
+        .fontSize(5.5);
+
+      const scheduleHeight =
+        doc.heightOfString(
+          `Schedule: ${formatSchedule(
+            competition,
+            state,
+          )}`,
+          {
+            width:
+              competitionTextWidth,
+          },
+        );
+
+      const rowHeight =
+        8 +
+        nameHeight +
+        (competition.topicEn
+          ? topicHeight + 4
+          : 0) +
+        (competition.instructions
+          ? instructionHeight + 4
+          : 0) +
+        scheduleHeight +
+        10;
+
+      return {
+        competition,
+        nameHeight,
+        topicHeight,
+        instructionHeight,
+        scheduleHeight,
+        rowHeight,
+      };
+    },
+  );
 
 const competitionHeight =
-  42 +
-  competitions.length *
-    competitionRowHeight;
+  32 +
+  competitionRows.reduce(
+    (total, row) =>
+      total + row.rowHeight,
+    0,
+  );
 
 doc
   .roundedRect(
@@ -821,101 +923,118 @@ doc
   .text(
     "COMPETITIONS",
     left + 16,
-    y + 11,
+    y + 10,
   );
 
 let rowY =
-  y + 31;
+  y + 28;
 
-competitions.forEach(
-  (competition, index) => {
+competitionRows.forEach(
+  (row, index) => {
+
+    const competition =
+      row.competition;
 
     if (index > 0) {
       doc
         .moveTo(
           left + 16,
-          rowY - 6,
+          rowY - 4,
         )
         .lineTo(
           left +
             contentWidth -
             16,
-          rowY - 6,
+          rowY - 4,
         )
         .strokeColor("#e5dfef")
         .stroke();
     }
 
+    let textY =
+      rowY + 3;
+
     // Competition name
     doc
       .font("Helvetica-Bold")
       .fillColor("#6a3ea1")
-      .fontSize(8.5)
+      .fontSize(8.2)
       .text(
         competition.name,
         left + 16,
-        rowY,
+        textY,
         {
-          width: 190,
+          width:
+            competitionTextWidth,
         },
       );
 
-    // Topic - English only
+    textY +=
+      row.nameHeight + 2;
+
+    // Topic
     if (competition.topicEn) {
       doc
         .font("Helvetica-Bold")
         .fillColor("#70551c")
-        .fontSize(7)
+        .fontSize(6.2)
         .text(
           `Topic: ${competition.topicEn}`,
           left + 16,
-          rowY + 14,
+          textY,
           {
             width:
-              contentWidth - 32,
+              competitionTextWidth,
           },
         );
+
+      textY +=
+        row.topicHeight + 3;
     }
 
-    // Instructions - English only
+    // FULL Instructions
     if (competition.instructions) {
       doc
         .font("Helvetica")
         .fillColor("#52615b")
-        .fontSize(6.8)
+        .fontSize(
+          instructionFontSize,
+        )
         .text(
           `Instructions: ${competition.instructions}`,
           left + 16,
-          rowY + 28,
+          textY,
           {
             width:
-              contentWidth - 32,
-            height: 18,
-            ellipsis: true,
+              competitionTextWidth,
+            lineGap: 0,
           },
         );
+
+      textY +=
+        row.instructionHeight + 3;
     }
 
     // Schedule
     doc
       .font("Helvetica")
       .fillColor("#6f7d78")
-      .fontSize(6.5)
+      .fontSize(5.5)
       .text(
         `Schedule: ${formatSchedule(
           competition,
           state,
         )}`,
         left + 16,
-        rowY + 49,
+        textY,
         {
           width:
-            contentWidth - 32,
+            competitionTextWidth,
         },
       );
 
     rowY +=
-      competitionRowHeight;
+      row.rowHeight;
   },
 );
 
