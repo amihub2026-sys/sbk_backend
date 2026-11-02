@@ -794,92 +794,133 @@ const column2 =
    * COMPETITIONS
    * ==========================================
    */
+const competitionRowHeight = 64;
 
-  const competitionHeight =
-    42 +
-    competitions.length * 30;
+const competitionHeight =
+  42 +
+  competitions.length *
+    competitionRowHeight;
 
-  doc
-    .roundedRect(
-      left,
-      y,
-      contentWidth,
-      competitionHeight,
-      10,
-    )
-    .fillAndStroke(
-      "#f8f5ff",
-      "#ddd3ef",
-    );
-
-  doc
-    .font("Helvetica-Bold")
-    .fillColor("#153f35")
-    .fontSize(10)
-    .text(
-      "COMPETITIONS",
-      left + 16,
-      y + 11,
-    );
-
-  let rowY =
-    y + 31;
-
-  competitions.forEach(
-    (competition, index) => {
-
-      if (index > 0) {
-        doc
-          .moveTo(
-            left + 16,
-            rowY - 5,
-          )
-          .lineTo(
-            left +
-              contentWidth -
-              16,
-            rowY - 5,
-          )
-          .strokeColor("#e5dfef")
-          .stroke();
-      }
-
-      doc
-        .font("Helvetica-Bold")
-        .fillColor("#6a3ea1")
-        .fontSize(8.5)
-        .text(
-          competition.name,
-          left + 16,
-          rowY,
-          {
-            width: 190,
-          },
-        );
-
-      doc
-        .font("Helvetica")
-        .fillColor("#6f7d78")
-        .fontSize(7)
-        .text(
-          formatSchedule(
-            competition,
-            state,
-          ),
-          left + 220,
-          rowY,
-          {
-            width:
-              contentWidth - 236,
-            align: "right",
-          },
-        );
-
-      rowY += 30;
-    },
+doc
+  .roundedRect(
+    left,
+    y,
+    contentWidth,
+    competitionHeight,
+    10,
+  )
+  .fillAndStroke(
+    "#f8f5ff",
+    "#ddd3ef",
   );
 
-  y += competitionHeight + 8;
+doc
+  .font("Helvetica-Bold")
+  .fillColor("#153f35")
+  .fontSize(10)
+  .text(
+    "COMPETITIONS",
+    left + 16,
+    y + 11,
+  );
+
+let rowY =
+  y + 31;
+
+competitions.forEach(
+  (competition, index) => {
+
+    if (index > 0) {
+      doc
+        .moveTo(
+          left + 16,
+          rowY - 6,
+        )
+        .lineTo(
+          left +
+            contentWidth -
+            16,
+          rowY - 6,
+        )
+        .strokeColor("#e5dfef")
+        .stroke();
+    }
+
+    // Competition name
+    doc
+      .font("Helvetica-Bold")
+      .fillColor("#6a3ea1")
+      .fontSize(8.5)
+      .text(
+        competition.name,
+        left + 16,
+        rowY,
+        {
+          width: 190,
+        },
+      );
+
+    // Topic - English only
+    if (competition.topicEn) {
+      doc
+        .font("Helvetica-Bold")
+        .fillColor("#70551c")
+        .fontSize(7)
+        .text(
+          `Topic: ${competition.topicEn}`,
+          left + 16,
+          rowY + 14,
+          {
+            width:
+              contentWidth - 32,
+          },
+        );
+    }
+
+    // Instructions - English only
+    if (competition.instructions) {
+      doc
+        .font("Helvetica")
+        .fillColor("#52615b")
+        .fontSize(6.8)
+        .text(
+          `Instructions: ${competition.instructions}`,
+          left + 16,
+          rowY + 28,
+          {
+            width:
+              contentWidth - 32,
+            height: 18,
+            ellipsis: true,
+          },
+        );
+    }
+
+    // Schedule
+    doc
+      .font("Helvetica")
+      .fillColor("#6f7d78")
+      .fontSize(6.5)
+      .text(
+        `Schedule: ${formatSchedule(
+          competition,
+          state,
+        )}`,
+        left + 16,
+        rowY + 49,
+        {
+          width:
+            contentWidth - 32,
+        },
+      );
+
+    rowY +=
+      competitionRowHeight;
+  },
+);
+
+y +=
+  competitionHeight + 8;
 
   /*
    * ==========================================
