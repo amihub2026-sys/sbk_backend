@@ -37,6 +37,13 @@ const STAR_GURU_LOGO_PATH =
     __dirname,
     "../assets/star-guru-logo.png",
   );
+  const RULES_PDF_PATH =
+  path.join(
+    process.cwd(),
+    "public",
+    "rules",
+    "chithiram-thiruvila-rules.pdf",
+  );
 async function readGridFsImage(value) {
   if (
     !value ||
@@ -164,7 +171,7 @@ function buildMimeMessage({
   subject,
   text,
   html,
-  attachment,
+  attachments = [],
 }) {
   const mixedBoundary =
     `mixed_${Date.now()}_${Math.random()
@@ -176,7 +183,6 @@ function buildMimeMessage({
       .toString(36)
       .slice(2)}`;
 
-
   const lines = [
     `From: ${from}`,
     `To: ${to}`,
@@ -184,6 +190,7 @@ function buildMimeMessage({
     "MIME-Version: 1.0",
     `Content-Type: multipart/mixed; boundary="${mixedBoundary}"`,
     "",
+
     `--${mixedBoundary}`,
     `Content-Type: multipart/alternative; boundary="${alternativeBoundary}"`,
     "",
@@ -204,19 +211,23 @@ function buildMimeMessage({
 
     `--${alternativeBoundary}--`,
     "",
-
-    `--${mixedBoundary}`,
-    `Content-Type: ${attachment.contentType}; name="${attachment.filename}"`,
-    "Content-Transfer-Encoding: base64",
-    `Content-Disposition: attachment; filename="${attachment.filename}"`,
-    "",
-    wrapBase64(
-      attachment.content,
-    ),
-    "",
-
-    `--${mixedBoundary}--`,
   ];
+
+  for (const attachment of attachments) {
+    lines.push(
+      `--${mixedBoundary}`,
+      `Content-Type: ${attachment.contentType}; name="${attachment.filename}"`,
+      "Content-Transfer-Encoding: base64",
+      `Content-Disposition: attachment; filename="${attachment.filename}"`,
+      "",
+      wrapBase64(attachment.content),
+      "",
+    );
+  }
+
+  lines.push(
+    `--${mixedBoundary}--`,
+  );
 
   return lines.join("\r\n");
 }
@@ -1372,7 +1383,10 @@ export async function sendPassEmail(
       registration,
       state,
     );
-
+const rulesPdf =
+  fs.readFileSync(
+    RULES_PDF_PATH,
+  );
 
   const competitionNames =
     registration.competitionIds
@@ -1416,10 +1430,11 @@ Competition time and venue will be announced by the organiser.
 
 Please keep the attached registration pass safely and show its QR at event check-in.
 
+For complete competition rules and guidelines, please refer to the separately attached Rules PDF.
+
 Thank you.`;
 
-
-  const html = `
+const html = `
         <h2>${
           state.settings.title ||
           "Chithiram Thiruvila"
@@ -1460,10 +1475,15 @@ Thank you.`;
           Will be announced by the organiser.
         </p>
 
-        <p>
-          Please keep the attached registration pass safely
-          and show its QR at event check-in.
-        </p>
+     <p>
+  Please keep the attached registration pass safely
+  and show its QR at event check-in.
+</p>
+
+<p>
+  <strong>Competition Rules & Guidelines:</strong>
+  Please refer to the separately attached Rules PDF for complete instructions.
+</p>
       `;
 
 
@@ -1481,16 +1501,29 @@ Thank you.`;
 
       html,
 
-      attachment: {
-        filename:
-          `${registration.applicationNo}-event-pass.pdf`,
+   attachments: [
+  {
+    filename:
+      `${registration.applicationNo}-event-pass.pdf`,
 
-        content:
-          pdf,
+    content:
+      pdf,
 
-        contentType:
-          "application/pdf",
-      },
+    contentType:
+      "application/pdf",
+  },
+
+  {
+    filename:
+      "chithiram-thiruvila-rules.pdf",
+
+    content:
+      rulesPdf,
+
+    contentType:
+      "application/pdf",
+  },
+],
     });
 
 
