@@ -3,7 +3,29 @@ import { schemaOptions } from "./base.js";
 const {Schema,model,models}=mongoose;
 const schema=new Schema({
   key:{type:String,unique:true,index:true,required:true,trim:true},
-  name:{type:String,required:true,trim:true},tamil:{type:String,required:true,trim:true},
+  name:{
+  type:String,
+  required:true,
+  trim:true
+},
+
+tamil:{
+  type:String,
+  required:true,
+  trim:true
+},
+
+topicEn:{
+  type:String,
+  default:"",
+  trim:true
+},
+
+topicTa:{
+  type:String,
+  default:"",
+  trim:true
+},
   kind:{type:String,enum:["Art","Writing","Speaking","Quiz"],required:true,index:true},
   categoryIds:[{type:Schema.Types.ObjectId,ref:"Category",required:true}],
   fee:{type:Number,min:0,default:0},slotId:{type:Schema.Types.ObjectId,ref:"Slot",default:null,index:true},

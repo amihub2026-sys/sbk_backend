@@ -99,6 +99,16 @@ export const competitionSchema =
       .min(1)
       .max(160),
 
+topicEn: z
+  .string()
+  .optional()
+  .default(""),
+
+topicTa: z
+  .string()
+  .optional()
+  .default(""),
+
     kind: z.enum([
       "Art",
       "Writing",
